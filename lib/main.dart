@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ukk_2025/login/login.dart';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
@@ -18,12 +17,11 @@ Future<void> main() async {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Login',
+      title: 'Login', 
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginScreen(),
+      home: LoginPage(),
     );
   }
-  
 }

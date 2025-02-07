@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ukk_2025/home_page/home_page.dart';
 
-class LoginController {
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
 
-  Future<void> login(BuildContext context) async {
-    final username = usernameController.text.trim();
-    final password = passwordController.text.trim();
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  Future<void> _login() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username dan password tidak boleh kosong.')),
+        const SnackBar(
+            content: Text('Username dan password tidak boleh kosong.')),
       );
       return;
     }
@@ -35,11 +43,13 @@ class LoginController {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => HomePage(userId: userId, username: userName)),
+              builder: (context) =>
+                  HomePage(userId: userId, username: userName)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login gagal. Username atau password salah.')),
+          const SnackBar(
+              content: Text('Login gagal. Username atau password salah.')),
         );
       }
     } catch (e) {
@@ -49,6 +59,9 @@ class LoginController {
     }
   }
   
-  HomePage({required userId, required username}) {}
-}
+  @override
+  Widget build(BuildContext context) {
+    throw UnimplementedError();
+  }
 
+}
