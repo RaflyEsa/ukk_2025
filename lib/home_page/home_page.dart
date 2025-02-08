@@ -1,10 +1,7 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ukk_2025/login/login.dart';
-import 'package:ukk_2025/pelanggan/pelanggan.dart';
 
 class HomePage extends StatefulWidget {
   final int userId;
