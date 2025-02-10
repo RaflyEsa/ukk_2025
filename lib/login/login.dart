@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ukk_2025/home_page/home_page.dart';
 import 'package:ukk_2025/login/logika_login.dart';
-import 'package:ukk_2025/login/snack_bar.dart';
+import 'package:ukk_2025/helper_snackbar/snackbar.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -61,6 +61,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Gambar Logo
                 const Image(
                   image: AssetImage('assets/images/kasir.png'),
                   height: 250,
@@ -68,6 +69,8 @@ class _LoginPageState extends State<LoginPage> {
                   fit: BoxFit.cover,
                 ),
                 const SizedBox(height: 8),
+
+                // Judul Halaman
                 const Text(
                   "Halaman Login Kasir",
                   style: TextStyle(
@@ -78,6 +81,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 30),
 
+                // Input Username
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
@@ -90,6 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 16),
 
+                // Input Password
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
@@ -103,6 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 30),
 
+                // Tombol Login
                 ElevatedButton(
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(

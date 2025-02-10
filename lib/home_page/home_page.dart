@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ukk_2025/login/login.dart';
+import 'package:ukk_2025/transaksi/transaksi.dart';
 
 class HomePage extends StatefulWidget {
   final int userId;
@@ -13,7 +14,8 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   List<Map<String, dynamic>> _products = [];
   final TextEditingController _nameController = TextEditingController();
@@ -39,7 +41,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Future<void> fetchProduk() async {
     try {
-      final response = await supabase.from('produk').select().order('produk_id');
+      final response =
+          await supabase.from('produk').select().order('produk_id');
       setState(() {
         _products = List<Map<String, dynamic>>.from(response);
       });
@@ -49,7 +52,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Future<void> addProduct() async {
-    if (_nameController.text.isEmpty || _hargaController.text.isEmpty || _stokController.text.isEmpty) return;
+    if (_nameController.text.isEmpty ||
+        _hargaController.text.isEmpty ||
+        _stokController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Isi semua kolom!'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
     try {
       await supabase.from('produk').insert({
         'nama_produk': _nameController.text,
@@ -58,22 +69,59 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       });
       fetchProduk();
       Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Produk ditambahkan!'),
+            backgroundColor: Colors.green),
+      );
     } catch (e) {
-      print('Error adding product: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menambah!'), backgroundColor: Colors.red),
+      );
     }
   }
 
-  Future<void> updateProduct(int id) async {
+  Future<void> updateProduct(
+      int id, String oldNama, int oldHarga, int oldStok) async {
+    String newNama = _nameController.text;
+    int newHarga = int.tryParse(_hargaController.text) ?? 0;
+    int newStok = int.tryParse(_stokController.text) ?? 0;
+
+    if (newNama == oldNama && newHarga == oldHarga && newStok == oldStok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Tidak ada perubahan!'),
+            backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (newNama.isEmpty || newHarga <= 0 || newStok < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Isi semua kolom dengan benar!'),
+            backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
     try {
       await supabase.from('produk').update({
-        'nama_produk': _nameController.text,
-        'harga': int.parse(_hargaController.text),
-        'stok': int.parse(_stokController.text),
+        'nama_produk': newNama,
+        'harga': newHarga,
+        'stok': newStok,
       }).eq('produk_id', id);
       fetchProduk();
       Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Produk diperbarui!'), backgroundColor: Colors.green),
+      );
     } catch (e) {
-      print('Error updating product: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Gagal memperbarui!'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -103,7 +151,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: Colors.red, // Background red
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24), // Tombol lebih besar
+                padding: EdgeInsets.symmetric(
+                    vertical: 16, horizontal: 24), // Tombol lebih besar
                 minimumSize: Size(120, 48), // Ukuran minimum tombol
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -119,7 +168,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: Colors.green, // Background green
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24), // Tombol lebih besar
+                padding: EdgeInsets.symmetric(
+                    vertical: 16, horizontal: 24), // Tombol lebih besar
                 minimumSize: Size(120, 48), // Ukuran minimum tombol
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -130,6 +180,58 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 deleteProduct(id);
                 Navigator.of(context).pop(); // Menutup dialog setelah menghapus
               },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void addToTransaction(Map<String, dynamic> product) {
+    TextEditingController jumlahController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Pilih Jumlah"),
+          content: TextField(
+            controller: jumlahController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: "Masukkan jumlah",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () {
+                int jumlah = int.tryParse(jumlahController.text) ?? 0;
+                if (jumlah > 0 && jumlah <= product['stok']) {
+                  Navigator.pop(context); // Tutup dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TransaksiPage(
+                        selectedProduct: product,
+                        jumlahDibeli: jumlah,
+                      ),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text("Jumlah tidak valid!"),
+                        backgroundColor: Colors.red),
+                  );
+                }
+              },
+              child: Text("Lanjutkan"),
             ),
           ],
         );
@@ -182,18 +284,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   margin: EdgeInsets.symmetric(vertical: 8),
                   child: ListTile(
                     title: Text(product['nama_produk'],
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Harga: Rp${product['harga']}', style: TextStyle(fontSize: 16)),
-                        Text('Stok: ${product['stok']}', style: TextStyle(fontSize: 16)),
+                        Text('Harga: Rp${product['harga']}',
+                            style: TextStyle(fontSize: 16)),
+                        Text('Stok: ${product['stok']}',
+                            style: TextStyle(fontSize: 16)),
                       ],
                     ),
                     trailing: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        IconButton(
+                          icon: Icon(Icons.shopping_cart, color: Colors.green),
+                          onPressed: () => addToTransaction(product),
+                        ),
                         IconButton(
                           icon: Icon(Icons.edit),
                           onPressed: () => showProductDialog(
@@ -205,7 +314,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         ),
                         IconButton(
                           icon: Icon(Icons.delete),
-                          onPressed: () => showDeleteConfirmation(product['produk_id']),
+                          onPressed: () =>
+                              showDeleteConfirmation(product['produk_id']),
                         ),
                       ],
                     ),
@@ -214,14 +324,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               }).toList(),
             ),
           ),
-          // Transaksi Tab
-          Center(child: Text('Halaman Transaksi')),
-          // Pelanggan Tab
+          TransaksiPage(),
+          
         ],
       ),
       floatingActionButton: _currentIndex == 0
           ? FloatingActionButton(
-              onPressed: () => showProductDialog(id: null, nama: null, harga: null, stok: null),
+              onPressed: () => showProductDialog(
+                  id: null, nama: null, harga: null, stok: null),
               child: Icon(Icons.add),
             )
           : null,
@@ -235,7 +345,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Produk'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Transaksi'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Transaksi'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'),
         ],
         selectedItemColor: Colors.black,
@@ -245,7 +355,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   // Function to show the product dialog (for adding and editing)
-  void showProductDialog({required id, required nama, required harga, required stok}) {
+  void showProductDialog(
+      {required id, required nama, required harga, required stok}) {
     _nameController.text = nama ?? '';
     _hargaController.text = harga != null ? harga.toString() : '';
     _stokController.text = stok != null ? stok.toString() : '';
@@ -322,7 +433,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 if (id == null) {
                   addProduct();
                 } else {
-                  updateProduct(id);
+                  updateProduct(id, nama!, harga!, stok!);
                 }
               },
               style: TextButton.styleFrom(
