@@ -25,7 +25,9 @@ class _LoginPageState extends State<LoginPage> {
     String password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      SnackbarHelper.showSnackbar(context, 'Username dan password tidak boleh kosong!', isError: true);
+      SnackbarHelper.showSnackbar(
+          context, 'Username dan password tidak boleh kosong!',
+          isError: true);
       return;
     }
 
@@ -33,18 +35,23 @@ class _LoginPageState extends State<LoginPage> {
       final user = await _authService.login(username, password);
 
       if (user != null) {
-        SnackbarHelper.showSnackbar(context, 'Login berhasil, selamat datang ${user['username']}!');
+        SnackbarHelper.showSnackbar(
+            context, 'Login berhasil, selamat datang ${user['username']}!');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomePage(userId: user['id'], username: user['username']),
+            builder: (context) =>
+                HomePage(userId: user['id'], username: user['username']),
           ),
         );
       } else {
-        SnackbarHelper.showSnackbar(context, 'Login gagal. Periksa username dan password!', isError: true);
+        SnackbarHelper.showSnackbar(
+            context, 'Login gagal. Periksa username dan password!',
+            isError: true);
       }
     } catch (e) {
-      SnackbarHelper.showSnackbar(context, 'Terjadi kesalahan: $e', isError: true);
+      SnackbarHelper.showSnackbar(context, 'Terjadi kesalahan: $e',
+          isError: true);
     }
   }
 
@@ -81,28 +88,32 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Input Username
-                TextField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(
-                    labelText: "Username",
-                    prefixIcon: const Icon(Icons.person, color: Colors.black),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                SizedBox(
+                  width: 250, // Atur lebar sesuai keinginan
+                  child: TextField(
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      labelText: "Username",
+                      prefixIcon: const Icon(Icons.person, color: Colors.black),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // Input Password
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    prefixIcon: const Icon(Icons.lock, color: Colors.black),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                SizedBox(
+                  width: 250, // Atur lebar sesuai keinginan
+                  child: TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      prefixIcon: const Icon(Icons.lock, color: Colors.black),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
@@ -113,14 +124,18 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xff3a57e8),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 40),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
                     "Login",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
                   ),
                 ),
               ],
