@@ -8,6 +8,10 @@ class PelangganPage extends StatefulWidget {
 
 class _PelangganPageState extends State<PelangganPage> {
   List<Map<String, dynamic>> _pelanggan = [];
+  List<Map<String, dynamic>> _filteredPelanggan = [];
+  String _searchQuery = '';
+
+
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _alamatController = TextEditingController();
   final TextEditingController _teleponController = TextEditingController();
@@ -25,11 +29,25 @@ class _PelangganPageState extends State<PelangganPage> {
       final response = await supabase.from('pelanggan').select().order('pelanggan_id');
       setState(() {
         _pelanggan = List<Map<String, dynamic>>.from(response);
+         _filterPelanggan(_searchQuery);
       });
     } catch (e) {
       print('Error fetching pelanggan: $e');
     }
   }
+
+   void _filterPelanggan(String query) { //Fungsi untuk memfilter pelanggan berdasarkan pencarian
+    setState(() {
+      _searchQuery = query;
+      _filteredPelanggan = _pelanggan
+          .where((pelanggan) =>
+              pelanggan['nama_pelanggan'].toLowerCase().contains(query.toLowerCase()) ||
+              pelanggan['nomor_telepon'].toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  
 
   Future<void> addPelanggan() async {
   if (_namaController.text.isEmpty || _alamatController.text.isEmpty || _teleponController.text.isEmpty) {
@@ -257,10 +275,28 @@ Future<void> editPelanggan(int id, Map<String, dynamic> pelangganLama) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+       appBar: AppBar( //fitur pencarian
+        title: TextField(
+          onChanged: _filterPelanggan,
+          decoration: InputDecoration(
+            hintText: 'Cari pelanggan...',
+            border: InputBorder.none,
+            prefixIcon: Icon(Icons.search),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.clear),
+                    onPressed: () {
+                      _filterPelanggan('');
+                    },
+                  )
+                : null,
+          ),
+        ),
+      ),
       body: ListView.builder(
-        itemCount: _pelanggan.length,
+        itemCount: _searchQuery.isEmpty ? _pelanggan.length : _filteredPelanggan.length,
         itemBuilder: (context, index) {
-          final pelanggan = _pelanggan[index];
+          final pelanggan = _searchQuery.isEmpty ? _pelanggan[index] : _filteredPelanggan[index];
           return Card(
             margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: ListTile(

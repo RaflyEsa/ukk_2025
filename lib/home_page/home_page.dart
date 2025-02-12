@@ -18,7 +18,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  int pelangganId = 0;
   List<Map<String, dynamic>> _products = [];
+  List<Map<String, dynamic>> keranjangList = [];
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _hargaController = TextEditingController();
   final TextEditingController _stokController = TextEditingController();
@@ -52,7 +54,7 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-    Future<void> addProduct() async {
+  Future<void> addProduct() async {
     if (_nameController.text.isEmpty ||
         _hargaController.text.isEmpty ||
         _stokController.text.isEmpty) {
@@ -62,7 +64,7 @@ class _HomePageState extends State<HomePage>
       );
       return;
     }
-    
+
     try {
       // Cek apakah produk dengan nama yang sama sudah ada di database
       final existingProduct = await supabase
@@ -74,8 +76,7 @@ class _HomePageState extends State<HomePage>
       if (existingProduct != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Produk sudah ada!'),
-              backgroundColor: Colors.red),
+              content: Text('Produk sudah ada!'), backgroundColor: Colors.red),
         );
         return;
       }
@@ -100,7 +101,6 @@ class _HomePageState extends State<HomePage>
       );
     }
   }
-
 
   Future<void> updateProduct(
       int id, String oldNama, int oldHarga, int oldStok) async {
@@ -238,7 +238,7 @@ class _HomePageState extends State<HomePage>
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text("Jumlah harus lebih dari 0!"),
-                        backgroundColor: Colors.red),
+                        backgroundColor: Colors.orange),
                   );
                   return;
                 }
@@ -267,13 +267,9 @@ class _HomePageState extends State<HomePage>
 
                   // Jalankan transaksi Supabase
                   await supabase.from('penjualan').insert({
-                    'produk_id': product['produk_id'],
-                    'user_id': widget.userId,
-                    'jumlah': jumlah,
+                    'pelanggan_id': widget.userId,
                     'total_harga': (jumlah * product['harga']).toInt(),
-                    'tanggal': DateTime.now()
-                        .toIso8601String()
-                        .split('T')[0], 
+                    'tanggal_penjualan': DateTime.now().toIso8601String().split('T')[0],
                   });
 
                   // Ambil ID transaksi terakhir
@@ -308,13 +304,18 @@ class _HomePageState extends State<HomePage>
                         backgroundColor: Colors.green),
                   );
 
-                  // Navigasi ke halaman transaksi
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TransaksiPage(),
-                    ),
-                  );
+                  void checkout(
+                      int pelangganId, List<Map<String, dynamic>> keranjang) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransaksiPage(
+                          pelangganId: pelangganId,
+                          keranjang: keranjangList,
+                        ),
+                      ),
+                    );
+                  }
                 } catch (e) {
                   print("Error saat transaksi: $e");
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -346,33 +347,35 @@ class _HomePageState extends State<HomePage>
         title: Text('Tuanmuda Liquor'),
       ),
       drawer: Drawer(
-  child: Container( 
-    child: ListView(
-      padding: EdgeInsets.zero,
-      children: <Widget>[
-        UserAccountsDrawerHeader(
-          accountName: Text(widget.username, style: TextStyle(color: Colors.white)),
-          accountEmail: null,
-          currentAccountPicture: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Icon(
-              Icons.account_circle, size: 50,
-            color: Colors.black,),
-          ),
-          decoration: BoxDecoration(
-            color: Colors.blue, // Warna latar belakang header drawer
+        child: Container(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              UserAccountsDrawerHeader(
+                accountName: Text(widget.username,
+                    style: TextStyle(color: Colors.white)),
+                accountEmail: null,
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.account_circle,
+                    size: 50,
+                    color: Colors.black,
+                  ),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue, // Warna latar belakang header drawer
+                ),
+              ),
+              ListTile(
+                title: Text('Logout', style: TextStyle(color: Colors.black)),
+                leading: Icon(Icons.logout, color: Colors.black),
+                onTap: logout,
+              ),
+            ],
           ),
         ),
-        ListTile(
-          title: Text('Logout', style: TextStyle(color: Colors.black)),
-          leading: Icon(Icons.logout, color: Colors.black),
-          onTap: logout,
-        ),
-      ],
-    ),
-  ),
-),
-
+      ),
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -426,8 +429,7 @@ class _HomePageState extends State<HomePage>
             ),
           ),
           PelangganPage(),
-          TransaksiPage(),
-         
+          TransaksiPage(pelangganId: pelangganId, keranjang: keranjangList),
         ],
       ),
       floatingActionButton: _currentIndex == 0
@@ -446,11 +448,9 @@ class _HomePageState extends State<HomePage>
           });
         },
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Produk'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.store), label: 'Produk'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people), label: 'Pelanggan'),
-           BottomNavigationBarItem(
               icon: Icon(Icons.receipt_long), label: 'Transaksi'),
         ],
         selectedItemColor: Colors.black,
